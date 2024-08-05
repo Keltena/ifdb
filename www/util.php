@@ -84,7 +84,14 @@ function mysqli_execute_query(mysqli $mysqli, string $sql, array $params = null)
     return false;  
   }
 
-  return $stmt->get_result();  
+  $result = $stmt->get_result();
+  // $stmt->get_result() returns false on successful INSERT/UPDATE statements
+  // https://www.php.net/manual/en/mysqli-stmt.get-result.php#refsect1-mysqli-stmt.get-result-returnvalues
+  if ($result === false && !$stmt->errno) {
+    return true;
+  } else {
+    return $result;
+  }
 }
 }
 
@@ -3211,7 +3218,9 @@ function coverArtThumbnail($id, $size, $params = "") {
     $x15 = round($size * 3 / 2);
     $x2 = $size * 2;
     $x3 = $size * 3;
-    return "<img srcset=\"$thumbnail{$size}x$size$params, $thumbnail{$x15}x$x15$params 1.5x, $thumbnail{$x2}x$x2$params 2x, $thumbnail{$x3}x$x3$params 3x\" src=\"/viewgame?id=$id&coverart&thumbnail={$size}x$size\" height=$size width=$size border=0 alt=\"\">";
+    global $nonce;
+    return "<style nonce='$nonce'>.coverart__img { max-width: 35vw; height: auto; }</style>"
+        ."<img class='coverart__img' srcset=\"$thumbnail{$size}x$size$params, $thumbnail{$x15}x$x15$params 1.5x, $thumbnail{$x2}x$x2$params 2x, $thumbnail{$x3}x$x3$params 3x\" src=\"/viewgame?id=$id&coverart&thumbnail={$size}x$size\" height=$size width=$size border=0 alt=\"\">";
 }
 
 // ----------------------------------------------------------------------------
